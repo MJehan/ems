@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "548709636193",
+    "project_id": "copy-ems",
+    "storage_bucket": "copy-ems.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548709636193:android:c3fd4d6f52b81279c2b220",
+        "android_client_info": {
+          "package_name": "com.example.copy_ems"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "548709636193-j8o1dheeqcbn191bn2shou3hqbprj1c2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCec8bz5bHQWUHEsR9hkEioJYs2YK_SMuM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "548709636193-j8o1dheeqcbn191bn2shou3hqbprj1c2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
