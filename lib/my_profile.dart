@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:copy_ems/popUpScreen/pop_up_for_punch_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,26 +17,26 @@ import 'constrains/bottom_navbar.dart';
 final CollectionReference collectionReference = FirebaseFirestore.instance.collection('test');
 final firebase = FirebaseFirestore.instance;
 String _identifier = 'Unknown';
+String buttonChecker = '';
+late User loggedInUser;
 
 class MyProfile extends StatefulWidget {
   static const String id = 'myProfile_screen';
 
-
-
+  const MyProfile({Key? key}) : super(key: key);
   @override
   _MyProfileState createState() => _MyProfileState();
 }
 
 class _MyProfileState extends State<MyProfile> {
   final _auth = FirebaseAuth.instance;
-  late User loggedInUser;
+
   String textData = '';
   String buttonTitle = '';
   final pop_controller = TextEditingController();
-
-
-
+  final noteTextController = TextEditingController();
   List timelinedatalist = [];
+
   @override
   void initState() {
     super.initState();
@@ -45,11 +47,11 @@ class _MyProfileState extends State<MyProfile> {
   {
     try
     {
-      final user = await _auth.currentUser;
+      final user = _auth.currentUser;
       if(user != null)
       {
         loggedInUser = user;
-        print(loggedInUser.email);
+        //print(loggedInUser.email);
       }
     }
     catch(e)
@@ -66,9 +68,10 @@ class _MyProfileState extends State<MyProfile> {
       "location": _currentAddress,
       "text" : buttonTitle,
       "time" : inTime,
+      "noteText" : noteTextController.text,
     });
   }
-  void daraStream() async
+  void dataStream() async
   {
     await for (var snapshot in firebase.collection('test').snapshots()) {
       for (var message in snapshot.docs) {
@@ -76,16 +79,6 @@ class _MyProfileState extends State<MyProfile> {
       }
     }
   }
-  // void getResult() async
-  // {
-  //   final messages= await firebase.collection('new_test').get();
-  //   for(var message in messages.docs){
-  //     print(message.data());
-  //
-  //   }
-  // }
-
-
 
   fetchDatabasList() async
   {
@@ -109,6 +102,7 @@ class _MyProfileState extends State<MyProfile> {
   void dispose()
   {
     pop_controller.dispose();
+    noteTextController.dispose();
     super.dispose();
   }
 
@@ -123,7 +117,7 @@ class _MyProfileState extends State<MyProfile> {
     if (!mounted) return;
 
     setState(() {
-      _identifier = identifier;
+      _identifier = loggedInUser.uid;
     });
   }
 
@@ -134,13 +128,15 @@ class _MyProfileState extends State<MyProfile> {
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const <Widget>[
+          children:  <Widget>[
             TextField(
+              controller: noteTextController,
               autofocus: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Note',
               ),
               //controller: pop_controller,
+
             ),
           ],
         ),
@@ -236,14 +232,29 @@ class _MyProfileState extends State<MyProfile> {
                       onPressed: (){
                         if(flag == true)
                         {
-                          setState(() {
-                            buttonTitle = 'Check In';
-                          });
-                          //print(loggedInUser);
                           _getCurrentLocation();
-                          create();
-                          DateTime now = DateTime.now();
-                          inTime = DateFormat.Hms().format(now);
+                          setState(() {
+                            buttonChecker = 'green';
+                            buttonTitle = 'Check In';
+                            print('inside setsate');
+                            DateTime now = DateTime.now();
+                            inTime = DateFormat.Hms().format(now);
+                            //create();
+                          });
+                          if(_currentAddress == null)
+                            {
+                              _getCurrentLocation();
+                              print('inside if condition');
+                              DateTime now = DateTime.now();
+                              inTime = DateFormat.Hms().format(now);
+                            }
+                          else
+                            {
+                              create();
+                              print('inside else');
+
+                            }
+
                           flag = false;
                         }
                         else {
@@ -276,22 +287,31 @@ class _MyProfileState extends State<MyProfile> {
                   ),
                   Expanded(
                     child: FlatButton(
-                      onPressed: () {
+                      onPressed: () async {
                         print(_identifier);
-                        daraStream();
-                        // openDialog();
-                        // final textData = await openDialog();
-                        // if(textData == null || textData.isEmpty) return;
-                        // setState(() {
-                        //   this.textData = textData;
-                        //   print(textData);
-                        // });
+                        dataStream();
+                         openDialog();
+                         final textData = noteTextController.text;
+                         print('test data : $textData');
+
+                         if(textData == null || textData.isEmpty)
+                           {
+                             print('no Data foiund: $noteTextController');
+                             return;
+                           }
+                         setState(() {
+                           this.textData = textData;
+                           print('Data is $textData');
+
+                         });
+                         noteTextController.text = '';
                       },
                       color: Colors.black12,
                       child: Column(
                         children: const <Widget>[
                           Icon(Icons.location_on_outlined, size: 65.00, color: Colors.blue),
-                          Text('Check Point',
+                          Text(
+                            'Check Point',
                             style: TextStyle(
                               fontSize: 15.00,
                               color: Colors.blue,
@@ -313,13 +333,27 @@ class _MyProfileState extends State<MyProfile> {
                       onPressed: (){
                         if(flag == false)
                         {
-                          setState(() {
-                            buttonTitle = 'Check Out';
-                          });
                           _getCurrentLocation();
-                          create();
-                          DateTime now = DateTime.now();
-                          inTime = DateFormat.Hms().format(now);
+                          setState(() {
+                            buttonChecker = 'Red';
+                            buttonTitle = 'Check Out';
+                            DateTime now = DateTime.now();
+                            inTime = DateFormat.Hms().format(now);
+                            print('check out inside setSate');
+                            //create();
+                          });
+                          if(_currentAddress == null)
+                            {
+                              _getCurrentLocation();
+                              print('check out inside if');
+                              DateTime now = DateTime.now();
+                              inTime = DateFormat.Hms().format(now);
+                            }
+                          else
+                            {
+                              create();
+                              print('check out inside else');
+                            }
                           flag = true;
                         }
                         else {
@@ -506,7 +540,7 @@ class StreamBuilderScreen extends StatelessWidget {
     return StreamBuilder<QuerySnapshot>(
       //stream: firebase.collection('test').orderBy('time').where('identifier',isEqualTo: _identifier).snapshots(),
       stream: firebase.collection('test').orderBy('time').snapshots(),
-      // stream: firebase.collection('test').snapshots(),
+      // stream: firebase.collection('test').orderBy('time').snapshots(),
       builder: (context, snapshot) {
         if(snapshot.hasData){
           final messages = snapshot.data!.docs;
@@ -527,7 +561,10 @@ class StreamBuilderScreen extends StatelessWidget {
             ),
           );
         }
-        return const Center(child: CircularProgressIndicator(),);
+        return const Center(child: Text('No Data Found in firebase'),
+
+        );
+        //return const Center(child: CircularProgressIndicator(),);
       },
     );
   }
@@ -548,7 +585,8 @@ class ListViewScreen extends StatelessWidget {
       padding: const EdgeInsets.all(10.0),
       child: Column(
         children: <Widget>[
-          Text(text,
+          Text(
+            text,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
