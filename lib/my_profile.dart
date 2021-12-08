@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:copy_ems/popUpScreen/pop_up_for_punch_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -51,7 +49,6 @@ class _MyProfileState extends State<MyProfile> {
       if(user != null)
       {
         loggedInUser = user;
-        //print(loggedInUser.email);
       }
     }
     catch(e)
@@ -59,7 +56,6 @@ class _MyProfileState extends State<MyProfile> {
       print(e);
     }
   }
-
   create() {
     firebase.collection('test').add({
       "identifier": _identifier,
@@ -79,25 +75,20 @@ class _MyProfileState extends State<MyProfile> {
       }
     }
   }
-
   fetchDatabasList() async
   {
     List resultList = await DatabaseManager().getDataOnTimeLineView();
-
     if(resultList == null)
       {
         print('Data Test : $resultList');
-        print('No Data fetch');
       }
     else
       {
         setState(() {
           timelinedatalist = resultList;
         });
-        print('Data test : $timelinedatalist');
       }
   }
-
   @override
   void dispose()
   {
@@ -105,7 +96,6 @@ class _MyProfileState extends State<MyProfile> {
     noteTextController.dispose();
     super.dispose();
   }
-
   Future<void> initUniqueIdentifierState() async {
     String identifier;
     try {
@@ -113,7 +103,6 @@ class _MyProfileState extends State<MyProfile> {
     } on PlatformException {
       identifier = 'Failed to get Unique Identifier';
     }
-
     if (!mounted) return;
 
     setState(() {
@@ -156,7 +145,6 @@ class _MyProfileState extends State<MyProfile> {
 
     });
     Navigator.of(context).pop(pop_controller.text);
-    //print(textData);
   }
 
 
@@ -229,32 +217,27 @@ class _MyProfileState extends State<MyProfile> {
                 children: <Widget>[
                   Expanded(
                     child: FlatButton(
-                      onPressed: (){
+                      onPressed: () async {
                         if(flag == true)
                         {
-                          _getCurrentLocation();
+                          await _getCurrentLocation();
                           setState(() {
                             buttonChecker = 'green';
                             buttonTitle = 'Check In';
-                            print('inside setsate');
                             DateTime now = DateTime.now();
                             inTime = DateFormat.Hms().format(now);
                             //create();
                           });
                           if(_currentAddress == null)
                             {
-                              _getCurrentLocation();
-                              print('inside if condition');
+                              await _getCurrentLocation();
                               DateTime now = DateTime.now();
                               inTime = DateFormat.Hms().format(now);
                             }
                           else
                             {
                               create();
-                              print('inside else');
-
                             }
-
                           flag = false;
                         }
                         else {
@@ -288,21 +271,16 @@ class _MyProfileState extends State<MyProfile> {
                   Expanded(
                     child: FlatButton(
                       onPressed: () async {
-                        print(_identifier);
                         dataStream();
                          openDialog();
                          final textData = noteTextController.text;
-                         print('test data : $textData');
 
                          if(textData == null || textData.isEmpty)
                            {
-                             print('no Data foiund: $noteTextController');
                              return;
                            }
                          setState(() {
                            this.textData = textData;
-                           print('Data is $textData');
-
                          });
                          noteTextController.text = '';
                       },
@@ -333,26 +311,22 @@ class _MyProfileState extends State<MyProfile> {
                       onPressed: (){
                         if(flag == false)
                         {
-                          _getCurrentLocation();
+                           _getCurrentLocation();
                           setState(() {
                             buttonChecker = 'Red';
                             buttonTitle = 'Check Out';
                             DateTime now = DateTime.now();
                             inTime = DateFormat.Hms().format(now);
-                            print('check out inside setSate');
-                            //create();
                           });
                           if(_currentAddress == null)
                             {
                               _getCurrentLocation();
-                              print('check out inside if');
                               DateTime now = DateTime.now();
                               inTime = DateFormat.Hms().format(now);
                             }
                           else
                             {
                               create();
-                              print('check out inside else');
                             }
                           flag = true;
                         }
@@ -503,14 +477,15 @@ class _MyProfileState extends State<MyProfile> {
       bottomNavigationBar: const BottomNavBar(),
     );
   }
-  _getCurrentLocation() {
-    Geolocator
+  _getCurrentLocation() async{
+      await Geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
+        .then((Position position)  async {
       setState(() {
         _currentPosition = position;
       });
-      _getAddressFromLatLng();
+
+      await _getAddressFromLatLng();
     }).catchError((e) {
       print(e);
     });
@@ -523,7 +498,7 @@ class _MyProfileState extends State<MyProfile> {
       long = _currentPosition!.longitude;
       Placemark place = p[0];
       setState(() {
-        _currentAddress = '${place.name},${place.thoroughfare},${place.locality},${place.postalCode},${place.country}';
+        _currentAddress = '${place.name},${place.locality},${place.postalCode},${place.country}';
         //_currentAddress = "${place.street},${place.subThoroughfare},${place.thoroughfare}, ${place.subLocality}, ${place.locality},${place.country},";
       });
     } catch (e) {
