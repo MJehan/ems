@@ -4,19 +4,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unique_identifier/unique_identifier.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'DatabaseManager/database_manager.dart';
 import 'constrains/bottom_navbar.dart';
-import 'login/login_screen.dart';
 
 
 final CollectionReference collectionReference = FirebaseFirestore.instance.collection('test');
 final firebase = FirebaseFirestore.instance;
- String ? _identifier;
+String _identifier = 'Unknown';
 String buttonChecker = '';
 late User loggedInUser;
 String date = '';
@@ -43,11 +41,6 @@ class _MyProfileState extends State<MyProfile> {
     super.initState();
     initUniqueIdentifierState();
     getCurrentUser();
-    setState(() {
-      _identifier = loggedInUser.uid;
-      DateTime now = DateTime.now();
-      date = DateFormat.yMd().format(now);
-    });
   }
   void getCurrentUser() async
   {
@@ -118,7 +111,7 @@ class _MyProfileState extends State<MyProfile> {
     setState(() {
       _identifier = loggedInUser.uid;
     });
-    //print('UID: $_identifier ');
+    print('UID: $_identifier ');
   }
 
   Future<String?> openDialog()=> showDialog<String>(
@@ -176,24 +169,10 @@ class _MyProfileState extends State<MyProfile> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        centerTitle: true,
         title: const Text(
           'My Feed',
           style: TextStyle(
             color: Colors.black,
-          ),
-        ),
-        leading: Align(
-            alignment: Alignment.centerRight,
-          child: IconButton(
-            onPressed: () async{
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.remove('email');
-              FirebaseAuth.instance.signOut().then((_){
-                Navigator.pushNamed(context, LoginScreen.id);
-              });
-            },
-            icon: const Icon(Icons.logout, color:Colors.black),
           ),
         ),
         backgroundColor: Colors.white,
@@ -540,11 +519,9 @@ class StreamBuilderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context)  {
-    print('stid : $_identifier');
-    print('stdte : $date');
     return StreamBuilder<QuerySnapshot>(
-       stream: firebase.collection('test').orderBy('time').where('date',isEqualTo: date)
-           .where('identifier', isEqualTo: _identifier ).snapshots(),
+      stream: firebase.collection('test').orderBy('time').where('date',isEqualTo: date)
+          .where('identifier', isEqualTo: _identifier ).snapshots(),
       //stream: firebase.collection('test').orderBy('time').where('date',isEqualTo: date).snapshots(),
       // stream: firebase.collection('test').orderBy('time').snapshots(),
       builder: (context, snapshot) {

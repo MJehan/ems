@@ -3,10 +3,12 @@ import 'package:copy_ems/component/rounded_button.dart';
 import 'package:copy_ems/constrains/constrain.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
-
 import 'login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+final CollectionReference collectionReference = FirebaseFirestore.instance.collection('users');
 
 class RegistrationScreen extends StatefulWidget {
   static const String id = 'registration_screen';
@@ -21,6 +23,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool showSpinner = false;
   late String email;
   late String password;
+  late String name;
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +41,25 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: Hero(
                   tag: 'logo',
                   child: Container(
-                    height: 200.0,
-                    //child: Image.asset('images/logo.png'),
+                    //height: 200.0,
+                    child: Image.asset('images/scom.jpg'),
                   ),
                 ),
               ),
               const SizedBox(
                 height: 48.0,
+              ),
+              TextField(
+                //obscureText: true,
+                textAlign: TextAlign.center,
+                onChanged: (value) {
+                  name = value;
+                },
+                decoration: kTextFieldDecoration.copyWith(
+                    hintText: 'Enter your Name'),
+              ),
+              const SizedBox(
+                height: 24.0,
               ),
               TextField(
                 keyboardType: TextInputType.emailAddress,
@@ -72,7 +87,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               RoundedButton(
                 title: 'Register',
-                colour: Colors.blueAccent,
+                colour: Colors.lightBlueAccent,
                 onPressed: () async {
                   setState(() {
                     showSpinner = true;
@@ -81,7 +96,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     final newUser  = await _auth.createUserWithEmailAndPassword(email: email, password: password);
                     if(newUser != null)
                       {
-                        Navigator.pushNamed(context, LoginScreen.id);
+                        User? user = await _auth.currentUser;
+                        collectionReference.doc(user!.uid).set({
+                          "name" : name,
+                          "email" : email,
+                          "password" : password,
+                        }).then((value) async {
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          prefs.setString('email', email);
+                          Navigator.pushNamed(context, LoginScreen.id);
+                        });
                       }
                     setState(() {
                       showSpinner = false;
